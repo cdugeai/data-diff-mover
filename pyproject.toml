@@ -1,0 +1,12 @@
+[project]
+name = "data-diff-mover"
+version = "0.1.0"
+description = "Tool to diff data and move it."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "coverage>=7.6.10",
+    "mypy>=1.14.1",
+    "pytest>=8.3.4",
+    "ruff>=0.9.3",
+]
