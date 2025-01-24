@@ -1,7 +1,8 @@
+from src.Comparer import RowState
 from src.output.Output import Output
 import warnings
 
-from polars import read_csv, DataFrame
+from polars import read_csv, DataFrame, col, Schema
 
 
 class CsvOutput(Output):
@@ -27,3 +28,25 @@ class CsvOutput(Output):
             )
             self.current_content = DataFrame()
             self.has_fetched = True
+
+    def persist_changes(
+        self,
+        row_comparison: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ):
+        print("Persisting changes...")
+        if not is_schema_identical:
+            # wipe data not needed on CSV output
+            pass
+
+        print("Changes preview:")
+        print(row_comparison.group_by(col("row_state")).count())
+
+        new_df = row_comparison.filter(col("row_state").ne(RowState.DELETED)).select(
+            new_schema
+        )
+
+        if not dry_run:
+            new_df.write_csv(self.path)

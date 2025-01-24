@@ -1,5 +1,5 @@
 import abc
-from polars import DataFrame
+from polars import DataFrame, Schema
 
 
 class Output:
@@ -26,3 +26,13 @@ class Output:
 
     def __str__(self) -> str:
         return f"{self.base_string()} : {self.current_content.__str__()}"
+
+    @abc.abstractmethod
+    def persist_changes(
+        self,
+        row_comparison: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ):
+        pass

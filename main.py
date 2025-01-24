@@ -2,12 +2,12 @@ from src.Comparer import Comparer
 from src.input.CsvInput import CsvInput
 from src.output.CsvOutput import CsvOutput
 
-target_file = CsvInput("target_file", "data/target.csv")
-print(target_file)
-print(target_file.describe())
+new_data = CsvInput("new_data", "data/new_data.csv")
+print(new_data)
+print(new_data.describe())
 
-target_file.load()
-print(target_file)
+new_data.load()
+print(new_data)
 
 current_content = CsvOutput("current", "data/current.csv")
 print(current_content.describe())
@@ -16,8 +16,8 @@ current_content.fetch_current_content()
 print(current_content)
 
 
-c = Comparer(target_file, current_content)
+c = Comparer(new_data, current_content)
 print(c)
 c.compare()
 
-target_file.data
+c.persist_compare(dry_run=True)
