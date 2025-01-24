@@ -19,3 +19,5 @@ print(current_content)
 c = Comparer(target_file, current_content)
 print(c)
 c.compare()
+
+target_file.data
