@@ -5,3 +5,5 @@
 src/__pycache__/
 src/input/__pycache__/
 src/output/__pycache__/
+.coverage
+tests/__pycache__/

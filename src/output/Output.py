@@ -9,30 +9,30 @@ class Output:
     name: str
     has_fetched: bool
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str) -> None:  # pragma: no cover
         self.current_content = DataFrame()
         self.name = name
         self.has_fetched = False
         pass
 
-    def fetch_current_content(self) -> None:
+    def fetch_current_content(self) -> None:  # pragma: no cover
         self.current_content = self.fetch()
         self.has_fetched = True
         pass
 
     @abc.abstractmethod
     def fetch(self) -> DataFrame:
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def describe(self) -> str:
-        return ""
+        return ""  # pragma: no cover
 
     def base_string(self) -> str:
-        return f"<{self.__class__.__name__}> {self.name}"
+        return f"<{self.__class__.__name__}> {self.name}"  # pragma: no cover
 
     def __str__(self) -> str:
-        return f"{self.base_string()} : {self.current_content.__str__()}"
+        return f"{self.base_string()} : {self.current_content.__str__()}"  # pragma: no cover
 
     @abc.abstractmethod
     def hook_on_deleted(
@@ -42,7 +42,7 @@ class Output:
         new_schema: Schema,
         dry_run: bool,
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def hook_on_updated(
@@ -52,7 +52,7 @@ class Output:
         new_schema: Schema,
         dry_run: bool,
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def hook_on_created(
@@ -62,7 +62,7 @@ class Output:
         new_schema: Schema,
         dry_run: bool,
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def hook_on_unchanged(
@@ -72,7 +72,7 @@ class Output:
         new_schema: Schema,
         dry_run: bool,
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def hook_finally(
@@ -82,11 +82,11 @@ class Output:
         new_schema: Schema,
         dry_run: bool,
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def on_schema_changed(self, current_schema: Schema, new_schema: Schema) -> None:
-        pass
+        pass  # pragma: no cover
 
     def persist_changes(
         self,

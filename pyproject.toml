@@ -12,3 +12,7 @@ dependencies = [
     "requests>=2.32.3",
     "ruff>=0.9.3",
 ]
+
+[tool.coverage.html]
+
+directory = "tests/coverage-report"

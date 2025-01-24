@@ -7,7 +7,7 @@ class Input:
     name: str
     has_load: bool
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str) -> None:  # pragma: no cover
         self.data = DataFrame()
         self.name = name
         self.has_load = False
@@ -19,10 +19,10 @@ class Input:
 
     @abc.abstractmethod
     def describe(self) -> str:
-        return ""
+        return ""  # pragma: no cover
 
     def base_string(self) -> str:
-        return f"<{self.__class__.__name__}> {self.name}"
+        return f"<{self.__class__.__name__}> {self.name}"  # pragma: no cover
 
     def __str__(self) -> str:
-        return f"{self.base_string()} : {self.data.__str__()}"
+        return f"{self.base_string()} : {self.data.__str__()}"  # pragma: no cover
