@@ -2,19 +2,19 @@ import abc
 from polars import DataFrame
 
 
-class Input:
-    data: DataFrame
+class Output:
+    current_content: DataFrame
     name: str
-    has_load: bool
+    has_fetched: bool
 
     def __init__(self, name: str) -> None:
-        self.data = DataFrame()
+        self.current_content = DataFrame()
         self.name = name
-        self.has_load = False
+        self.has_fetched = False
         pass
 
     @abc.abstractmethod
-    def load(self) -> None:
+    def fetch_current_content(self) -> None:
         pass
 
     @abc.abstractmethod

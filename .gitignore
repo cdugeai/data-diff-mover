@@ -4,3 +4,4 @@
 .python-version
 src/__pycache__/
 src/input/__pycache__/
+src/output/__pycache__/
