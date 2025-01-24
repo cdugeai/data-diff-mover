@@ -1,43 +1,75 @@
+import abc
 from src.output.Output import Output
-import warnings
 
 from polars import Schema, DataFrame
 
 
 class APIOutput(Output):
-    url: str
+    base_url: str
+    headers: dict[str, str]
 
-    def __init__(self, name: str, url: str) -> None:
+    def __init__(self, name: str, base_url: str) -> None:
         super().__init__(name)
-        self.url = url
+        self.base_url = base_url
+        self.headers = {}
 
     def describe(self) -> str:
-        return f"{self.base_string()} : filepath -> {self.url}"
+        return f"{self.base_string()} : filepath -> {self.base_url}"
 
+    @abc.abstractmethod
     def fetch_current_content(self) -> None:
         pass
 
-    def update(self, id, value):
-        pass
-
-    def delete(self, id, value):
-        pass
-
-    def create(self, id, value):
-        pass
-
-    def skip(self, id, value):
-        pass
-
-    def persist_changes(
+    @abc.abstractmethod
+    def hook_on_deleted(
         self,
-        row_comparison: DataFrame,
+        rows_deleted: DataFrame,
         is_schema_identical: bool,
         new_schema: Schema,
         dry_run: bool,
-    ):
-        print("Persisting changes...")
-        if not is_schema_identical:
-            warnings.warn("Schema is different, wiping data")
-            # wipe data
-        print(row_comparison)
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
+    def hook_on_updated(
+        self,
+        rows_updated: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
+    def hook_on_created(
+        self,
+        rows_created: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
+    def hook_on_unchanged(
+        self,
+        rows_unchanged: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
+    def hook_finally(
+        self,
+        rows: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
+    def on_schema_changed(self, current_schema: Schema, new_schema: Schema) -> None:
+        pass

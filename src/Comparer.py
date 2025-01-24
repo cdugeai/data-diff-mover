@@ -1,18 +1,8 @@
-from enum import Enum
-
+from src.RowState import RowState
 from src.input.Input import Input
 from src.output.Output import Output
 
 from polars import DataFrame, Schema, Series, col, lit, when
-
-
-class RowState(Enum):
-    CREATED = "created"
-    UPDATED = "updated"
-    DELETED = "deleted"
-    MOVED = "moved"
-    UNCHANGED = "unchanged"
-    UNDEFINED = "undefined"
 
 
 class Comparer:
@@ -106,7 +96,7 @@ class Comparer:
 
         return changes_rows
 
-    def persist_compare(self, dry_run):
+    def persist_compare(self, dry_run: bool) -> None:
         self.output_.persist_changes(
             self.data_compare,
             self.is_identical_schema,

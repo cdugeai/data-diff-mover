@@ -1,5 +1,7 @@
 import abc
-from polars import DataFrame, Schema
+from polars import DataFrame, Schema, col
+
+from src.RowState import RowState
 
 
 class Output:
@@ -13,8 +15,13 @@ class Output:
         self.has_fetched = False
         pass
 
-    @abc.abstractmethod
     def fetch_current_content(self) -> None:
+        self.current_content = self.fetch()
+        self.has_fetched = True
+        pass
+
+    @abc.abstractmethod
+    def fetch(self) -> DataFrame:
         pass
 
     @abc.abstractmethod
@@ -28,11 +35,92 @@ class Output:
         return f"{self.base_string()} : {self.current_content.__str__()}"
 
     @abc.abstractmethod
+    def hook_on_deleted(
+        self,
+        rows_deleted: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
+    def hook_on_updated(
+        self,
+        rows_updated: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
+    def hook_on_created(
+        self,
+        rows_created: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
+    def hook_on_unchanged(
+        self,
+        rows_unchanged: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
+    def hook_finally(
+        self,
+        rows: DataFrame,
+        is_schema_identical: bool,
+        new_schema: Schema,
+        dry_run: bool,
+    ) -> None:
+        pass
+
+    @abc.abstractmethod
+    def on_schema_changed(self, current_schema: Schema, new_schema: Schema) -> None:
+        pass
+
     def persist_changes(
         self,
         row_comparison: DataFrame,
         is_schema_identical: bool,
         new_schema: Schema,
         dry_run: bool,
-    ):
-        pass
+    ) -> None:
+        print("Persisting changes...")
+        if not is_schema_identical:
+            self.on_schema_changed(self.current_content.schema, new_schema)
+
+        self.hook_on_unchanged(
+            row_comparison.filter(col("row_state").eq(RowState.UNCHANGED)),
+            is_schema_identical,
+            new_schema,
+            dry_run,
+        )
+        self.hook_on_deleted(
+            row_comparison.filter(col("row_state").eq(RowState.DELETED)),
+            is_schema_identical,
+            new_schema,
+            dry_run,
+        )
+        self.hook_on_created(
+            row_comparison.filter(col("row_state").eq(RowState.CREATED)),
+            is_schema_identical,
+            new_schema,
+            dry_run,
+        )
+        self.hook_on_updated(
+            row_comparison.filter(col("row_state").eq(RowState.UPDATED)),
+            is_schema_identical,
+            new_schema,
+            dry_run,
+        )
+        self.hook_finally(row_comparison, is_schema_identical, new_schema, dry_run)
