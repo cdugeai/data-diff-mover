@@ -1,6 +1,9 @@
-def main():
-    print("Hello from data-diff-mover!")
+from src.input.CsvInput import CsvInput
 
+target_file = CsvInput("target_file", "data/target.csv")
+print(target_file)
+print(target_file.describe())
 
-if __name__ == "__main__":
-    main()
+target_file.load()
+print(target_file)
+

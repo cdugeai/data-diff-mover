@@ -2,3 +2,5 @@
 .idea/
 
 .python-version
+src/__pycache__/
+src/input/__pycache__/
