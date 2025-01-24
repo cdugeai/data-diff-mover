@@ -19,6 +19,11 @@ class CsvOutput(Output):
             self.current_content = read_csv(self.path)
             self.has_fetched = True
         except FileNotFoundError:
-            warnings.warn(self.base_string() + ": No such file found for " + self.path)
+            warnings.warn(
+                self.base_string()
+                + ": No such file found for "
+                + self.path
+                + ". Using empty dataframe as fetched data."
+            )
             self.current_content = DataFrame()
             self.has_fetched = True

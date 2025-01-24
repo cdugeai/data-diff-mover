@@ -1,3 +1,4 @@
+from src.Comparer import Comparer
 from src.input.CsvInput import CsvInput
 from src.output.CsvOutput import CsvOutput
 
@@ -13,3 +14,8 @@ print(current_content.describe())
 
 current_content.fetch_current_content()
 print(current_content)
+
+
+c = Comparer(target_file, current_content)
+print(c)
+c.compare()

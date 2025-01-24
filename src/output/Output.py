@@ -25,4 +25,4 @@ class Output:
         return f"<{self.__class__.__name__}> {self.name}"
 
     def __str__(self) -> str:
-        return f"{self.base_string()} : {self.data.__str__()}"
+        return f"{self.base_string()} : {self.current_content.__str__()}"
