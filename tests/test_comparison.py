@@ -176,3 +176,33 @@ def test_compare_wrong_pk() -> None:
         print(comparison)
         print(expected_comparison)
         assert_frame_equal(comparison, expected_comparison)
+
+
+def test_compare_create_with_pk_different_names() -> None:
+    # pk is "a"
+    df_current = pl.from_dicts([{"a": 1, "b": 5}])
+    # pk is "d"
+    df_new = pl.from_dicts([{"c": 2, "d": 5}, {"c": 3, "d": 6}, {"c": 10, "d": 1}])
+    comparison = Comparer.dataframe_compare(df_current, "a", df_new, "d")
+    expected_comparison = pl.from_dicts([
+        {"pk_current": None, "pk_new": 5, "row_state": RowState.CREATED.value, "c": 2, "d": 5},
+        {"pk_current": None, "pk_new": 6, "row_state": RowState.CREATED.value, "c": 3, "d": 6},
+        {"pk_current": 1, "pk_new": 1, "row_state": RowState.UPDATED.value, "c": 10, "d": 1},
+    ],
+    schema={"pk_current": int, "pk_new": int,"row_state": str,"c": int, "d":int})  # fmt: skip
+    assert_frame_equal(comparison, expected_comparison)
+
+
+def test_compare_create_with_pk_swapped_names() -> None:
+    # pk is "a"
+    df_current = pl.from_dicts([{"a": 1, "b": 5}])
+    # pk is "b"
+    df_new = pl.from_dicts([{"a": 2, "b": 5}, {"a": 3, "b": 6}, {"a": 10, "b": 1}])
+    comparison = Comparer.dataframe_compare(df_current, "a", df_new, "b")
+    expected_comparison = pl.from_dicts([
+        {"pk_current": None, "pk_new": 5, "row_state": RowState.CREATED.value, "a": 2, "b": 5},
+        {"pk_current": None, "pk_new": 6, "row_state": RowState.CREATED.value, "a": 3, "b": 6},
+        {"pk_current": 1, "pk_new": 1, "row_state": RowState.UPDATED.value, "a": 10, "b": 1},
+    ],
+    schema={"pk_current": int, "pk_new": int,"row_state": str,"a": int, "b":int})  # fmt: skip
+    assert_frame_equal(comparison, expected_comparison)
