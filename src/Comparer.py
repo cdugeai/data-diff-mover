@@ -1,4 +1,5 @@
 from src.RowState import RowState
+from src.exceptions import ColumnNameIsNotPK
 from src.input.Input import Input
 from src.output.Output import Output
 
@@ -73,6 +74,16 @@ class Comparer:
         df_new: DataFrame,
         pk_colname_new: str | None,
     ) -> DataFrame:
+        """
+
+        :param df_base:
+        :param pk_colname_base:
+        :param df_new:
+        :param pk_colname_new:
+        :return:
+
+        :raises ColumnNameIsNotPK: if the column is not PK
+        """
         current_rows_hash: Series = df_base.hash_rows()
 
         # No PK column name provided
@@ -80,9 +91,8 @@ class Comparer:
             # PK will be row index
             current_content_with_pk = df_base.with_row_index(name="pk_current")
         else:
-            # Assert is PK
-            if not cls.assert_is_primary_key(df_base, pk_colname_base):
-                raise RuntimeError(pk_colname_base + " is not a PK for this dataframe")
+            # Assert is PK or raise Error
+            cls.assert_is_primary_key(df_base, pk_colname_base)
             # PK is specified column
             current_content_with_pk = df_base.with_columns(
                 col(pk_colname_base).alias("pk_current")
@@ -97,9 +107,8 @@ class Comparer:
             # PK will be row index
             new_content_with_pk = df_new.with_row_index(name="pk_new")
         else:
-            # Assert is PK
-            if not cls.assert_is_primary_key(df_new, pk_colname_new):
-                raise RuntimeError(pk_colname_new + " is not a PK for this dataframe")
+            # Assert is PK or raise Error
+            cls.assert_is_primary_key(df_new, pk_colname_new)
             # PK is specified column
             new_content_with_pk = df_new.with_columns(
                 col(pk_colname_new).alias("pk_new")
@@ -156,12 +165,19 @@ class Comparer:
         :param df: input Dataframe
         :param pk_colname: Name of the column to check for PK
         :return:
+
+        :raises ColumnNameIsNotPK: if the column is not PK
         """
-        return (
+
+        n_pk_with_multiple_rows = (
             df.select(col(pk_colname))
             .group_by(col(pk_colname))
             .len(name="occurences_pk")
             .filter(col("occurences_pk").gt(1))
             .height
-            == 0
         )
+
+        if n_pk_with_multiple_rows > 0:
+            raise ColumnNameIsNotPK(column_name=pk_colname)
+        else:
+            return True

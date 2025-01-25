@@ -1,8 +1,9 @@
 from src.Comparer import Comparer
 import polars as pl
 from polars.testing import assert_frame_equal
-
+from pytest import raises
 from src.RowState import RowState
+from src.exceptions import ColumnNameIsNotPK
 
 
 def test_compare_delete() -> None:
@@ -146,3 +147,32 @@ def test_compare_unchanged_with_pk() -> None:
     ],
     schema={"pk_current": int, "pk_new": int,"row_state": str,"a": int, "b":int})  # fmt: skip
     assert_frame_equal(comparison, expected_comparison)
+
+
+def test_compare_create_with_pk() -> None:
+    df_current = pl.from_dicts([{"a": 1, "b": 4}])
+    df_new = pl.from_dicts([{"a": 2, "b": 5}, {"a": 3, "b": 6}, {"a": 1, "b": 6}])
+    comparison = Comparer.dataframe_compare(df_current, "a", df_new, "a")
+    expected_comparison = pl.from_dicts([
+        {"pk_current": None, "pk_new": 2, "row_state": RowState.CREATED.value, "a": 2, "b": 5},
+        {"pk_current": None, "pk_new": 3, "row_state": RowState.CREATED.value, "a": 3, "b": 6},
+        {"pk_current": 1, "pk_new": 1, "row_state": RowState.UPDATED.value, "a": 1, "b": 6},
+    ],
+    schema={"pk_current": int, "pk_new": int,"row_state": str,"a": int, "b":int})  # fmt: skip
+    assert_frame_equal(comparison, expected_comparison)
+
+
+def test_compare_wrong_pk() -> None:
+    with raises(ColumnNameIsNotPK):
+        df_current = pl.from_dicts([{"a": 1, "b": 4}])
+        df_new = pl.from_dicts([{"a": 2, "b": 5}, {"a": 2, "b": 6}, {"a": 1, "b": 6}])
+        comparison = Comparer.dataframe_compare(df_current, "a", df_new, "a")
+        expected_comparison = pl.from_dicts([
+            {"pk_current": None, "pk_new": 2, "row_state": RowState.CREATED.value, "a": 2, "b": 5},
+            {"pk_current": None, "pk_new": 3, "row_state": RowState.CREATED.value, "a": 3, "b": 6},
+            {"pk_current": 1, "pk_new": 1, "row_state": RowState.UPDATED.value, "a": 1, "b": 6},
+        ],
+        schema={"pk_current": int, "pk_new": int,"row_state": str,"a": int, "b":int})  # fmt: skip
+        print(comparison)
+        print(expected_comparison)
+        assert_frame_equal(comparison, expected_comparison)
