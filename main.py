@@ -2,14 +2,16 @@ from src.Comparer import Comparer
 from src.input.CsvInput import CsvInput
 from src.output.CsvOutput import CsvOutput
 
-new_data = CsvInput("new_data", "data/new_data.csv")
+new_data = CsvInput("new_data", "data/new_data.csv", use_row_index_as_primary_key=True)
 print(new_data)
 print(new_data.describe())
 
 new_data.load()
 print(new_data)
 
-current_content = CsvOutput("current", "data/current.csv")
+current_content = CsvOutput(
+    "current", "data/current.csv", use_row_index_as_primary_key=True
+)
 print(current_content.describe())
 
 current_content.fetch_current_content()

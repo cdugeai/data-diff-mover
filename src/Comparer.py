@@ -50,7 +50,12 @@ class Comparer:
         return schema1.__eq__(schema2)
 
     def compare_data(self) -> DataFrame:  # pragma: no cover
-        return self.dataframe_compare(self.output_.current_content, self.input_.data)
+        return self.dataframe_compare(
+            self.output_.current_content,
+            self.output_.primary_key,
+            self.input_.data,
+            self.input_.primary_key,
+        )
 
     def persist_compare(self, dry_run: bool) -> None:  # pragma: no cover
         self.output_.persist_changes(
@@ -60,29 +65,60 @@ class Comparer:
             dry_run,
         )
 
-    @staticmethod
-    def dataframe_compare(df_base: DataFrame, df_new: DataFrame) -> DataFrame:
-        current_rows_hash: Series = df_base.hash_rows(seed_1=1)
-        current_content_with_id = df_base.with_row_index(name="idx_current")
-        data_current: DataFrame = current_content_with_id.with_columns(
+    @classmethod
+    def dataframe_compare(
+        cls,
+        df_base: DataFrame,
+        pk_colname_base: str | None,
+        df_new: DataFrame,
+        pk_colname_new: str | None,
+    ) -> DataFrame:
+        current_rows_hash: Series = df_base.hash_rows()
+
+        # No PK column name provided
+        if pk_colname_base is None:
+            # PK will be row index
+            current_content_with_pk = df_base.with_row_index(name="pk_current")
+        else:
+            # Assert is PK
+            if not cls.assert_is_primary_key(df_base, pk_colname_base):
+                raise RuntimeError(pk_colname_base + " is not a PK for this dataframe")
+            # PK is specified column
+            current_content_with_pk = df_base.with_columns(
+                col(pk_colname_base).alias("pk_current")
+            )
+
+        data_current: DataFrame = current_content_with_pk.with_columns(
             current_rows_hash.alias("hash_row_current")
         )
 
-        new_content_with_id = df_new.with_row_index(name="idx_new")
-        new_rows_hash: Series = df_new.hash_rows(seed_1=1)
-        data_new: DataFrame = new_content_with_id.with_columns(
+        # No PK column name provided
+        if pk_colname_new is None:
+            # PK will be row index
+            new_content_with_pk = df_new.with_row_index(name="pk_new")
+        else:
+            # Assert is PK
+            if not cls.assert_is_primary_key(df_new, pk_colname_new):
+                raise RuntimeError(pk_colname_new + " is not a PK for this dataframe")
+            # PK is specified column
+            new_content_with_pk = df_new.with_columns(
+                col(pk_colname_new).alias("pk_new")
+            )
+
+        new_rows_hash: Series = df_new.hash_rows()
+        data_new: DataFrame = new_content_with_pk.with_columns(
             new_rows_hash.alias("hash_row_new")
         )
 
         diff_values_df = (
             data_current.select(
-                col("idx_current"),
+                col("pk_current"),
                 col("hash_row_current"),
             )
             .join(
-                data_new.select(col("idx_new"), col("hash_row_new")),
-                left_on="idx_current",
-                right_on="idx_new",
+                data_new.select(col("pk_new"), col("hash_row_new")),
+                left_on="pk_current",
+                right_on="pk_new",
                 how="full",
             )
             .with_columns(
@@ -91,23 +127,41 @@ class Comparer:
             .with_columns(
                 when(col("data_identical"))
                 .then(lit(RowState.UNCHANGED))
-                .when(col("idx_current").is_null())
+                .when(col("pk_current").is_null())
                 .then(lit(RowState.CREATED))
                 .when(col("data_identical").not_())
                 .then(lit(RowState.UPDATED))
-                .when(col("idx_new").is_null())
+                .when(col("pk_new").is_null())
                 .then(lit(RowState.DELETED))
                 .alias("row_state")
             )
         )
 
         changes_rows = diff_values_df.select(
-            col("idx_current"), col("idx_new"), col("row_state")
+            col("pk_current"), col("pk_new"), col("row_state")
         ).join(
-            new_content_with_id,
-            left_on="idx_new",
-            right_on="idx_new",
+            new_content_with_pk,
+            left_on="pk_new",
+            right_on="pk_new",
             how="left",
         )
 
         return changes_rows
+
+    @staticmethod
+    def assert_is_primary_key(df: DataFrame, pk_colname: str) -> bool:
+        """
+        Returns if pk_colname is actually a primary key
+        Check for the given key if multiples rows are found
+        :param df: input Dataframe
+        :param pk_colname: Name of the column to check for PK
+        :return:
+        """
+        return (
+            df.select(col(pk_colname))
+            .group_by(col(pk_colname))
+            .len(name="occurences_pk")
+            .filter(col("occurences_pk").gt(1))
+            .height
+            == 0
+        )

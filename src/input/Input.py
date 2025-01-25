@@ -5,11 +5,25 @@ from polars import DataFrame
 class Input:
     data: DataFrame
     name: str
+    primary_key: str | None
+    use_row_index_as_primary_key: bool
+
     has_load: bool
 
-    def __init__(self, name: str) -> None:  # pragma: no cover
+    def __init__(
+        self,
+        name: str,
+        primary_key: str | None,
+        use_row_index_as_primary_key: bool,
+    ) -> None:  # pragma: no cover
+        if primary_key is None and not use_row_index_as_primary_key:
+            raise RuntimeError(
+                "No primary key provided, please set use_row_index_as_primary_key to True"
+            )
         self.data = DataFrame()
         self.name = name
+        self.primary_key = primary_key
+        self.use_row_index_as_primary_key = use_row_index_as_primary_key
         self.has_load = False
         pass
 

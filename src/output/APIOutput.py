@@ -8,8 +8,14 @@ class APIOutput(Output):
     base_url: str
     headers: dict[str, str]
 
-    def __init__(self, name: str, base_url: str) -> None:
-        super().__init__(name)
+    def __init__(
+        self,
+        name: str,
+        base_url: str,
+        primary_key: str | None = None,
+        use_row_index_as_primary_key: bool = False,
+    ) -> None:
+        super().__init__(name, primary_key, use_row_index_as_primary_key)
         self.base_url = base_url
         self.headers = {}
 

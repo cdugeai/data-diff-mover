@@ -61,8 +61,18 @@ class CsvOutput(Output):
 
     path: str
 
-    def __init__(self, name: str, path: str) -> None:
-        super().__init__(name)
+    def __init__(
+        self,
+        name: str,
+        path: str,
+        primary_key: str | None = None,
+        use_row_index_as_primary_key: bool = False,
+    ) -> None:
+        super().__init__(
+            name,
+            primary_key,
+            use_row_index_as_primary_key,
+        )
         self.path = path
 
     def describe(self) -> str:
