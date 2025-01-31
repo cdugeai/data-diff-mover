@@ -1,4 +1,3 @@
-from src.Comparer import Comparer
 import src.from_ as from_
 import src.to_ as to_
 
@@ -21,8 +20,6 @@ current_content.fetch_current_content()
 print(current_content)
 
 
-c = Comparer(new_data, current_content)
-print(c)
-c.compare()
+current_content.diff(new_data)
 
-c.persist_compare(dry_run=True)
+current_content.persist_changes(new_data, dry_run=True)

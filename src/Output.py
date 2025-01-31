@@ -1,7 +1,12 @@
 import abc
 from polars import DataFrame, Schema, col
 
+from src.Input import Input
 from src.RowState import RowState
+from src.helpers.compare import (
+    dataframe_compare,
+    is_schema_identical,
+)
 
 
 class Output:
@@ -102,39 +107,63 @@ class Output:
     def on_schema_changed(self, current_schema: Schema, new_schema: Schema) -> None:
         pass  # pragma: no cover
 
+    def diff(self, input_: Input) -> DataFrame:  # pragma: no cover
+        if not input_.has_load:
+            raise RuntimeError("Please, load input data first")
+        if not self.has_fetched:
+            raise RuntimeError("Please, fetch output data first")
+
+        is_identical_schema: bool = is_schema_identical(
+            self.current_content.schema, input_.data.schema
+        )
+
+        data_compare: DataFrame = dataframe_compare(
+            self.current_content,
+            self.primary_key,
+            input_.data,
+            input_.primary_key,
+        )
+        print(data_compare)
+        return data_compare
+
     def persist_changes(
         self,
-        row_comparison: DataFrame,
-        is_schema_identical: bool,
-        new_schema: Schema,
+        input_: Input,
         dry_run: bool,
     ) -> None:
+        new_schema: Schema = input_.data.schema
+        is_same_schema: bool = is_schema_identical(
+            self.current_content.schema, new_schema
+        )
+        row_comparison: DataFrame = dataframe_compare(
+            self.current_content, self.primary_key, input_.data, input_.primary_key
+        )
         print("Persisting changes...")
-        if not is_schema_identical:
+        if not is_same_schema:
             self.on_schema_changed(self.current_content.schema, new_schema)
 
         self.hook_on_unchanged(
             row_comparison.filter(col("row_state").eq(RowState.UNCHANGED)),
-            is_schema_identical,
+            is_same_schema,
             new_schema,
             dry_run,
         )
         self.hook_on_deleted(
             row_comparison.filter(col("row_state").eq(RowState.DELETED)),
-            is_schema_identical,
+            is_same_schema,
             new_schema,
             dry_run,
         )
         self.hook_on_created(
             row_comparison.filter(col("row_state").eq(RowState.CREATED)),
-            is_schema_identical,
+            is_same_schema,
             new_schema,
             dry_run,
         )
         self.hook_on_updated(
             row_comparison.filter(col("row_state").eq(RowState.UPDATED)),
-            is_schema_identical,
+            is_same_schema,
             new_schema,
             dry_run,
         )
-        self.hook_finally(row_comparison, is_schema_identical, new_schema, dry_run)
+        self.hook_finally(row_comparison, is_same_schema, new_schema, dry_run)

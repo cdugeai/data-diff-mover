@@ -1,4 +1,4 @@
-from src.Comparer import Comparer
+from src.helpers.compare import assert_is_primary_key
 import polars as pl
 from pytest import raises
 
@@ -13,7 +13,7 @@ def test_assert_pk_false() -> None:
             {"a": 3, "b": 6}
         ])  # fmt: skip
 
-        assert not Comparer.assert_is_primary_key(df_in, "a")
+        assert not assert_is_primary_key(df_in, "a")
 
 
 def test_assert_pk_true() -> None:
@@ -23,4 +23,4 @@ def test_assert_pk_true() -> None:
         {"a": 4, "b": 6}
     ])  # fmt: skip
 
-    assert Comparer.assert_is_primary_key(df_in, "a")
+    assert assert_is_primary_key(df_in, "a")
