@@ -1,7 +1,7 @@
 from src.RowState import RowState
 from src.exceptions import ColumnNameIsNotPK
-from src.input.Input import Input
-from src.output.Output import Output
+from src.Input import Input
+from src.Output import Output
 
 from polars import DataFrame, Schema, Series, col, lit, when
 

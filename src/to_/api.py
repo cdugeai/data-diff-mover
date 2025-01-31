@@ -1,10 +1,10 @@
 import abc
-from src.output.Output import Output
+from src.Output import Output
 
 from polars import Schema, DataFrame
 
 
-class APIOutput(Output):
+class API(Output):
     base_url: str
     headers: dict[str, str]
 
