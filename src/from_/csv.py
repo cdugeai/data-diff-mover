@@ -1,8 +1,8 @@
-from src.input.Input import Input
+from src.Input import Input
 from polars import read_csv
 
 
-class CsvInput(Input):
+class CsvFile(Input):
     path: str
 
     def __init__(

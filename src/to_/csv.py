@@ -1,11 +1,11 @@
 from src.RowState import RowState
-from src.output.Output import Output
+from src.Output import Output
 import warnings
 
 from polars import read_csv, DataFrame, col, Schema
 
 
-class CsvOutput(Output):
+class CsvFile(Output):
     def hook_on_deleted(
         self,
         rows_deleted: DataFrame,
