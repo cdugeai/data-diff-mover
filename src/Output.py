@@ -1,8 +1,11 @@
 import abc
+from typing import Tuple
+
 from polars import DataFrame, Schema, col
 
 from src.Input import Input
 from src.RowState import RowState
+from src.exceptions import NoLoadedData
 from src.helpers.compare import (
     dataframe_compare,
     is_schema_identical,
@@ -107,11 +110,13 @@ class Output:
     def on_schema_changed(self, current_schema: Schema, new_schema: Schema) -> None:
         pass  # pragma: no cover
 
-    def diff(self, input_: Input) -> DataFrame:  # pragma: no cover
+    def diff(
+        self, input_: Input, quiet: bool = False
+    ) -> Tuple[DataFrame, bool]:  # pragma: no cover
         if not input_.has_load:
-            raise RuntimeError("Please, load input data first")
+            raise NoLoadedData(input_.name)
         if not self.has_fetched:
-            raise RuntimeError("Please, fetch output data first")
+            raise NoLoadedData(self.name)
 
         is_identical_schema: bool = is_schema_identical(
             self.current_content.schema, input_.data.schema
@@ -123,24 +128,26 @@ class Output:
             input_.data,
             input_.primary_key,
         )
-        print(data_compare)
-        return data_compare
+        if not quiet:
+            print(data_compare)
+
+        return data_compare, is_identical_schema
 
     def persist_changes(
         self,
         input_: Input,
         dry_run: bool,
-    ) -> None:
+    ) -> None:  # pragma: no cover
+        row_comparison: DataFrame
+        is_same_schema: bool
+        self.fetch_current_content()
+        row_comparison, is_same_schema = self.diff(input_, quiet=True)
         new_schema: Schema = input_.data.schema
-        is_same_schema: bool = is_schema_identical(
-            self.current_content.schema, new_schema
-        )
-        row_comparison: DataFrame = dataframe_compare(
-            self.current_content, self.primary_key, input_.data, input_.primary_key
-        )
-        print("Persisting changes...")
+
         if not is_same_schema:
             self.on_schema_changed(self.current_content.schema, new_schema)
+
+        print("Persisting changes...")
 
         self.hook_on_unchanged(
             row_comparison.filter(col("row_state").eq(RowState.UNCHANGED)),
