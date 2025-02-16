@@ -18,3 +18,13 @@ dependencies = [
 [tool.coverage.html]
 
 directory = "tests/coverage-report"
+
+[tool.coverage.run]
+omit = [
+    "src/from_/__init__.py"
+]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::UserWarning",
+]
