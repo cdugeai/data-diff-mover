@@ -1,0 +1,24 @@
+query getDossiersAcceptes(
+  $demarcheNumber: Int!,
+  $after: String!,
+  $limit: Int!
+) {
+  demarche(number: $demarcheNumber) {
+    dateCreation
+    dateDerniereModification
+    title
+    state
+    dossiers(after: $after, first: $limit) {
+      nodes {
+        id
+        dateDepot
+        state
+        number
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}
