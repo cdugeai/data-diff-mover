@@ -28,7 +28,7 @@ class Input:
         pass
 
     @abc.abstractmethod
-    def load(self) -> None:
+    def load(self) -> None:  # pragma: no cover
         pass
 
     @abc.abstractmethod

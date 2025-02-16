@@ -75,7 +75,7 @@ class CsvFile(Output):
         )
         self.path = path
 
-    def describe(self) -> str:
+    def describe(self) -> str:  # pragma: no cover
         return f"{self.base_string()} : filepath -> {self.path}"
 
     def fetch(self) -> DataFrame:

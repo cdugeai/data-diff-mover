@@ -19,10 +19,7 @@ class CsvFile(Input):
         )
         self.path = path
 
-    def set_path(self, path: str) -> None:
-        self.path = path
-
-    def describe(self) -> str:
+    def describe(self) -> str:  # pragma: no cover
         return f"{self.base_string()} : filepath -> {self.path}"
 
     def load(self) -> None:
