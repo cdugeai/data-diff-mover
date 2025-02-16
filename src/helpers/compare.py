@@ -1,6 +1,7 @@
 from src.RowState import RowState
 from src.exceptions import ColumnNameIsNotPK
 from polars import DataFrame, Schema, Series, col, lit, when
+import warnings
 
 
 def is_schema_identical(schema1: Schema, schema2: Schema) -> bool:
@@ -48,6 +49,12 @@ def dataframe_compare(
 
     :raises ColumnNameIsNotPK: if the column is not PK
     """
+    df_base_is_schema_null: bool = df_base.schema.len() == 0
+
+    if df_base_is_schema_null:
+        warnings.warn("Schema of target DF is NULL. Set it to schema of new DF.")
+        df_base = DataFrame(schema=df_new.schema)
+
     current_rows_hash: Series = df_base.hash_rows()
 
     # No PK column name provided
